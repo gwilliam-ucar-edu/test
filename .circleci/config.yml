@@ -48,9 +48,7 @@ jobs:
           name: "Tag image"
           command: |
             . /tmp/workspace/rc/build-push
-            PHP_VERSION=`docker run --rm $CIRCLE_PROJECT_REPONAME:latest sh -c 'echo $PHP_VERSION'`
             docker tag $CIRCLE_PROJECT_REPONAME:latest ncar/$CIRCLE_PROJECT_REPONAME:latest
-            docker tag $CIRCLE_PROJECT_REPONAME:latest ncar/$CIRCLE_PROJECT_REPONAME:$PHP_VERSION
 
       - run:
           name: "Push to Docker hub"
