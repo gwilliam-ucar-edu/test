@@ -1,0 +1,125 @@
+defaults: &defaults
+  docker:
+    - image: circleci/php:7-cli
+
+version: 2.1
+
+jobs:
+
+  build-push:
+    <<: *defaults
+
+    parameters:
+      scheduled-run:
+        type: boolean
+        default: false
+    steps:
+      - when:
+          condition: << parameters.scheduled-run >>
+          steps:
+            - attach_workspace:
+                at: /tmp/workspace
+      - unless:
+          condition: << parameters.scheduled-run >>
+          steps:
+            - run:
+                command: |
+                  mkdir -p /tmp/workspace/rc
+                  echo : >/tmp/workspace/rc/build-push
+
+      - checkout
+
+      - run:
+          name: "Pull submodules"
+          command: |
+            . /tmp/workspace/rc/build-push
+            git submodule init
+            git submodule update --remote citools
+
+      - setup_remote_docker
+
+      - run:
+          name: "Build image"
+          command: |
+            . /tmp/workspace/rc/build-push
+            citools/docker-build -t $CIRCLE_PROJECT_REPONAME:latest .
+
+      - run:
+          name: "Tag image"
+          command: |
+            . /tmp/workspace/rc/build-push
+            PHP_VERSION=`docker run --rm $CIRCLE_PROJECT_REPONAME:latest sh -c 'echo $PHP_VERSION'`
+            docker tag $CIRCLE_PROJECT_REPONAME:latest ncar/$CIRCLE_PROJECT_REPONAME:latest
+            docker tag $CIRCLE_PROJECT_REPONAME:latest ncar/$CIRCLE_PROJECT_REPONAME:$PHP_VERSION
+
+      - run:
+          name: "Push to Docker hub"
+          command: |
+            . /tmp/workspace/rc/build-push
+            docker login -u ${DOCKERHUB_USERNAME} -p ${DOCKERHUB_PASSWORD}
+            docker push ncar/$CIRCLE_PROJECT_REPONAME:latest
+
+  check-base-image:
+    <<: *defaults
+
+    steps:
+      - checkout
+
+      - run:
+          name: "Pull submodules"
+          command: |
+              git submodule init
+              git submodule update --remote citools
+
+      - setup_remote_docker
+
+      - run:
+          name: "Initialize workspace"
+          command: mkdir -p /tmp/workspace/rc
+
+      - run:
+          name: "Check if base image has changed"
+          command: |
+              citools/check-base-image -v \
+                --changefile=/tmp/no-build-push \
+                ncar/$CIRCLE_PROJECT_REPONAME:latest
+              if [ -f /tmp/no-build-push ] ; then
+                  echo "echo build-push suppressed" > /tmp/workspace/rc/build-push
+                  echo "exit 0" >> /tmp/workspace/rc/build-push
+              else
+                  echo > /tmp/workspace/rc/build-push
+              fi
+    
+      - persist_to_workspace:
+          root: /tmp/workspace
+          paths:
+            - rc
+
+workflows:
+  build-push:
+    jobs:
+      - build-push:
+          context: sweg
+          requires:
+            - init-build-push
+          filters:
+            tags:
+              only: /.*/
+
+  nightly:
+    triggers:
+      - schedule:
+          cron: "0 1 * * *"
+          filters:
+            branches:
+              only:
+                - master
+    jobs:
+      - check-base-image:
+          context: sweg
+      - build-push:
+          scheduled-run: true
+          context: sweg
+          requires:
+            - check-base-image
+
