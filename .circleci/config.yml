@@ -43,6 +43,14 @@ jobs:
             printenv | sed -e 's/PASSWORD=.*/PASSWORD=----/' \
                            -e 's/PRIVATE_KEY=.*/PRIVATE_KEY=----/' \
                            -e 's/SECRET_ACCESS_KEY=.*/SECRET_ACCESS_KEY=----/'
+            echo git status:
+            git status
+            echo git rev-list HEAD
+            git rev-list HEAD
+            echo git tag --list
+            git tag --list
+            echo git tag --list --points-at \$CIRCLE_SHA1
+            git tag --list --points-at $CIRCLE_SHA1
 
       - run:
           name: "Pull submodules"
@@ -91,8 +99,7 @@ jobs:
           command: mkdir -p /tmp/workspace/rc
 
       - run:
-          name: "Check if ba
-se image has changed"
+          name: "Check if base image has changed"
           command: |
               citools/check-base-image -v \
                 --changefile=/tmp/do-build-push \
