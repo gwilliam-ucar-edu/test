@@ -98,8 +98,6 @@ workflows:
     jobs:
       - build-push:
           context: sweg
-          requires:
-            - init-build-push
           filters:
             tags:
               only: /.*/
