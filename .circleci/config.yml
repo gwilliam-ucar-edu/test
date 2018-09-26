@@ -36,9 +36,9 @@ jobs:
             echo PWD=`pwd`
             echo HOME="$HOME"
             echo "ls -la .:"
-            ls -l .
+            ls -la .
             echo "ls -la $HOME:"
-            ls -l $HOME
+            ls -la $HOME
             echo printenv:
             printenv | sed -e 's/PASSWORD=.*/PASSWORD=----/' \
                            -e 's/PRIVATE_KEY=.*/PRIVATE_KEY=----/' \
@@ -91,16 +91,17 @@ jobs:
           command: mkdir -p /tmp/workspace/rc
 
       - run:
-          name: "Check if base image has changed"
+          name: "Check if ba
+se image has changed"
           command: |
               citools/check-base-image -v \
-                --changefile=/tmp/no-build-push \
+                --changefile=/tmp/do-build-push \
                 ncar/$CIRCLE_PROJECT_REPONAME:latest
-              if [ -f /tmp/no-build-push ] ; then
+              if [ -f /tmp/do-build-push ] ; then
+                  echo > /tmp/workspace/rc/build-push
+              else
                   echo "echo build-push suppressed" > /tmp/workspace/rc/build-push
                   echo "exit 0" >> /tmp/workspace/rc/build-push
-              else
-                  echo > /tmp/workspace/rc/build-push
               fi
     
       - persist_to_workspace:
