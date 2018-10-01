@@ -85,14 +85,14 @@ jobs:
           command: |
             . /tmp/workspace/rc/build-push
             bname=deployment-$CIRCLE_SHA1
-            git checkout -b \$bname
-            mkdir \$bname
+            git checkout -b $bname
+            mkdir $bname
             docker inspect ncar/circleci-sweg-php7-cli >img.tmp
-            jq -r '.[0].Id' <img.tmp >\$bname/image.digest
+            jq -r '.[0].Id' <img.tmp >$bname/image.digest
             jq '.[0].ContainerConfig.Labels' <img.tmp >labels.tmp
-            jq -r '."base.digest"' labels.tmp > \$bname/base.digest
-            jq -r '."base.tag"' labels.tmp > \$bname/base.tag
-            git add \$bname/*
+            jq -r '."base.digest"' labels.tmp > $bname/base.digest
+            jq -r '."base.tag"' labels.tmp > $bname/base.tag
+            git add $bname/*
             git commit -m "build $CIRCLE_BUILD_NUM"
             git push origin $bname
 
