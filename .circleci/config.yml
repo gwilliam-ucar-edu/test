@@ -87,7 +87,7 @@ jobs:
             bname=deployment-$CIRCLE_SHA1
             git checkout -b $bname
             mkdir $bname
-            docker inspect ncar/circleci-sweg-php7-cli >img.tmp
+            docker inspect $CIRCLE_PROJECT_REPONAME:latest >img.tmp
             jq -r '.[0].Id' <img.tmp >$bname/image.digest
             jq '.[0].ContainerConfig.Labels' <img.tmp >labels.tmp
             jq -r '."base.digest"' labels.tmp > $bname/base.digest
