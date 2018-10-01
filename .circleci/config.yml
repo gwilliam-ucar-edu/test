@@ -42,7 +42,8 @@ jobs:
             echo printenv:
             printenv | sed -e 's/PASSWORD=.*/PASSWORD=----/' \
                            -e 's/PRIVATE_KEY=.*/PRIVATE_KEY=----/' \
-                           -e 's/SECRET_ACCESS_KEY=.*/SECRET_ACCESS_KEY=----/'
+                           -e 's/SECRET_ACCESS_KEY=.*/SECRET_ACCESS_KEY=----/' \
+                           -e 's/GH_TOKEN=.*/GH_TOKEN=----/'
             echo git status:
             git status
             echo git rev-list HEAD
