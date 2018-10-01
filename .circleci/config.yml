@@ -85,6 +85,8 @@ jobs:
           command: |
             . /tmp/workspace/rc/build-push
             bname=deployment-$CIRCLE_SHA1
+            git config user.email "sweg-ci@ucar.edu"
+            git config user.name "SWEG CI Service User"
             git checkout -b $bname
             mkdir $bname
             docker inspect $CIRCLE_PROJECT_REPONAME:latest >img.tmp
