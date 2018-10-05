@@ -157,11 +157,7 @@ workflows:
   circle-test:
     triggers:
       - schedule:
-          cron: "10 20 * * *"
-          filters:
-            branches:
-              only:
-                - cistate
+          cron: "35 20 * * *"
 
     jobs:
       - trigger-job:
