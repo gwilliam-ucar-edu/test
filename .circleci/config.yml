@@ -157,7 +157,7 @@ workflows:
   circle-test:
     triggers:
       - schedule:
-          cron: "00 12 * * *"
+          cron: "30 13 * * *"
           filters:
             branches:
               only:
