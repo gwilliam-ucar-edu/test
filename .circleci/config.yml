@@ -158,6 +158,10 @@ workflows:
     triggers:
       - schedule:
           cron: "35 20 * * *"
+          filters:
+            branches:
+              ignore:
+                - cistate
 
     jobs:
       - trigger-job:
