@@ -22,7 +22,7 @@ jobs:
       - run:
           name: "Trigger test branch job"
           command: |
-            curl -X POST --header "Content-Type: application/json" -d '{"branch":"test"}' https://circleci.com/api/v1.1/project/github/gwilliam-ucar-edu/test/build?circle-token=$SWEG_CI_API_TOKEN
+            curl -X POST --header "Content-Type: application/json" -d '{"branch":"staging"}' https://circleci.com/api/v1.1/project/github/gwilliam-ucar-edu/test/build?circle-token=$SWEG_CI_API_TOKEN
 
   build-push:
     <<: *defaults
@@ -174,7 +174,7 @@ workflows:
           filters:
             branches:
               only:
-                - test
+                - staging
 
   build-push:
     jobs:
