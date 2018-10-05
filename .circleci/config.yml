@@ -6,6 +6,24 @@ version: 2.1
 
 jobs:
 
+  say-hello:
+    <<: *defaults
+
+    steps:
+      - run:
+          name: "Say Hello"
+          command: |
+            echo Hello!
+
+  trigger-job:
+    <<: *defaults
+
+    steps:
+      - run:
+          name: "Trigger test branch job"
+          command: |
+            curl -X POST --header "Content-Type: application/json" -d '{"branch":"test"}' https://circleci.com/api/v1.1/project/github/gwilliam-ucar-edu/test/build?circle-token=$SWEG_CI_API_TOKEN
+
   build-push:
     <<: *defaults
 
@@ -136,6 +154,28 @@ jobs:
             - rc
 
 workflows:
+  circle-test:
+    triggers:
+      - schedule:
+          cron: "15 11 * * *"
+          filters:
+            branches:
+              only:
+                - ci-state
+
+    jobs:
+      - trigger-job:
+          context: sweg-ci
+
+  hello:
+    jobs:
+      - say-hello:
+          context: sweg-ci
+          filters:
+            branches:
+              only:
+                - test
+
   build-push:
     jobs:
       - build-push:
