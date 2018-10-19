@@ -65,6 +65,7 @@ jobs:
             citools/docker-build -t $CIRCLE_PROJECT_REPONAME:latest .
 
 workflows:
+  version: 2
   build-push:
     jobs:
       - say-hello
