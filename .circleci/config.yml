@@ -1,31 +1,29 @@
-defaults: &defaults
-  docker:
-    - image: circleci/php:7-cli
-
 version: 2.1
+executors:
+  my-executor:
+    docker:
+      - image: circleci/php:7-cli
 
 jobs:
-
   say-hello:
-    <<: *defaults
-
+    executor: my-executor
     steps:
       - run:
           name: "Say Hello"
           command: |
             echo Hello!
 
-  trigger-job:
-    <<: *defaults
+  say-howdy:
+    executor: my-executor
 
     steps:
       - run:
-          name: "Trigger test branch job"
+          name: "Say Howdy"
           command: |
-            curl -X POST --header "Content-Type: application/json" -d '{"branch":"staging"}' https://circleci.com/api/v1.1/project/github/gwilliam-ucar-edu/test/build?circle-token=$SWEG_CI_API_TOKEN
+            echo Howdy!
 
   build-push:
-    <<: *defaults
+    executor: my-executor
 
     parameters:
       scheduled-run:
@@ -117,90 +115,13 @@ jobs:
             git commit -m "build $CIRCLE_BUILD_NUM"
             git push origin $bname
 
-  check-base-image:
-    <<: *defaults
-
-    steps:
-      - checkout
-
-      - run:
-          name: "Pull submodules"
-          command: |
-              git submodule init
-              git submodule update --remote citools
-
-      - setup_remote_docker
-
-      - run:
-          name: "Initialize workspace"
-          command: mkdir -p /tmp/workspace/rc
-
-      - run:
-          name: "Check if base image has changed"
-          command: |
-              citools/check-base-image -v \
-                --changefile=/tmp/do-build-push \
-                ncar/$CIRCLE_PROJECT_REPONAME:latest
-              if [ -f /tmp/do-build-push ] ; then
-                  echo > /tmp/workspace/rc/build-push
-              else
-                  echo "echo build-push suppressed" > /tmp/workspace/rc/build-push
-                  echo "exit 0" >> /tmp/workspace/rc/build-push
-              fi
-    
-      - persist_to_workspace:
-          root: /tmp/workspace
-          paths:
-            - rc
-
 workflows:
-  circle-test:
-    triggers:
-      - schedule:
-          cron: "35 20 * * *"
-          filters:
-            branches:
-              ignore:
-                - cistate
-
-    jobs:
-      - trigger-job:
-          context: sweg-ci
-
-  hello:
-    jobs:
-      - say-hello:
-          context: sweg-ci
-          filters:
-            branches:
-              only:
-                - staging
-
   build-push:
     jobs:
       - build-push:
-          context: sweg
           filters:
             branches:
               only:
                 - master
             tags:
               only: /.*/
-
-  nightly:
-    triggers:
-      - schedule:
-          cron: "0 14 * * *"
-          filters:
-            branches:
-              only:
-                - master
-    jobs:
-      - check-base-image:
-          context: sweg
-      - build-push:
-          scheduled-run: true
-          context: sweg
-          requires:
-            - check-base-image
-
