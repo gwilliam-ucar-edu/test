@@ -68,6 +68,8 @@ jobs:
 workflows:
   build-push:
     jobs:
+      - say-hello
+      - say-howdy
       - build-push:
           filters:
             branches:
