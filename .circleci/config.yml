@@ -5,7 +5,7 @@ executors:
       - image: circleci/php:7-cli
 
 jobs:
-  say-hello:
+  sayHello:
     executor: my-executor
     steps:
       - run:
@@ -13,7 +13,7 @@ jobs:
           command: |
             echo Hello!
 
-  say-howdy:
+  sayHowdy:
     executor: my-executor
 
     steps:
@@ -22,7 +22,7 @@ jobs:
           command: |
             echo Howdy!
 
-  build-push:
+  buildPush:
     executor: my-executor
 
     steps:
@@ -67,7 +67,7 @@ jobs:
 workflows:
   build-push:
     jobs:
-      - build-push:
+      - buildPush:
           filters:
             branches:
               only:
