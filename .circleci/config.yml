@@ -1,12 +1,9 @@
-defaults: &defaults
-  docker:
-    - image: circleci/php:7.2-cli
-
 version: 2.1
 
 jobs:
   say-hello:
-    <<: *defaults
+    docker:
+      - image: circleci/php:7.2-cli
 
     steps:
       - run:
@@ -15,7 +12,8 @@ jobs:
             echo Hello!
 
   say-howdy:
-    <<: *defaults
+    docker:
+      - image: circleci/php:7.2-cli
 
     steps:
       - run:
@@ -24,7 +22,8 @@ jobs:
             echo Howdy!
 
   build-push:
-    <<: *defaults
+    docker:
+      - image: circleci/php:7.2-cli
 
     steps:
       - checkout
