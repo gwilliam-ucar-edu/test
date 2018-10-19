@@ -1,12 +1,13 @@
+defaults: &defaults
+  docker:
+    - image: circleci/php:7.2-cli
+
 version: 2.1
-executors:
-  my-executor:
-    docker:
-      - image: circleci/php:7-cli
 
 jobs:
   sayHello:
-    executor: my-executor
+    <<: *defaults
+
     steps:
       - run:
           name: "Say Hello"
@@ -14,7 +15,7 @@ jobs:
             echo Hello!
 
   sayHowdy:
-    executor: my-executor
+    <<: *defaults
 
     steps:
       - run:
@@ -23,7 +24,7 @@ jobs:
             echo Howdy!
 
   buildPush:
-    executor: my-executor
+    <<: *defaults
 
     steps:
       - checkout
