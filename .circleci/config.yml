@@ -5,7 +5,7 @@ defaults: &defaults
 version: 2.1
 
 jobs:
-  sayHello:
+  say-hello:
     <<: *defaults
 
     steps:
@@ -14,7 +14,7 @@ jobs:
           command: |
             echo Hello!
 
-  sayHowdy:
+  say-howdy:
     <<: *defaults
 
     steps:
@@ -23,7 +23,7 @@ jobs:
           command: |
             echo Howdy!
 
-  buildPush:
+  build-push:
     <<: *defaults
 
     steps:
@@ -68,7 +68,7 @@ jobs:
 workflows:
   build-push:
     jobs:
-      - buildPush:
+      - build-push:
           filters:
             branches:
               only:
