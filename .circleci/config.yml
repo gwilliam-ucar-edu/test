@@ -68,7 +68,7 @@ workflows:
   version: 2
   build-push:
     jobs:
-      - say-hello
+      - say-hello:
           filters:
             branches:
               only:
