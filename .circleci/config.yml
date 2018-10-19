@@ -69,6 +69,10 @@ workflows:
   build-push:
     jobs:
       - say-hello
+          filters:
+            branches:
+              only:
+                - none
       - build
       - build-push:
           filters:
