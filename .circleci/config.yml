@@ -11,15 +11,15 @@ jobs:
           command: |
             echo Hello!
 
-  say-howdy:
+  build:
     docker:
       - image: circleci/php:7.2-cli
 
     steps:
       - run:
-          name: "Say Howdy"
+          name: "Nominal build step"
           command: |
-            echo Howdy!
+            echo "Build! (not really)"
 
   build-push:
     docker:
@@ -69,7 +69,7 @@ workflows:
   build-push:
     jobs:
       - say-hello
-      - say-howdy
+      - build
       - build-push:
           filters:
             branches:
