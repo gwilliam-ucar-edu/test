@@ -1,16 +1,6 @@
 version: 2.1
 
 jobs:
-  say-hello:
-    docker:
-      - image: circleci/php:7.2-cli
-
-    steps:
-      - run:
-          name: "Say Hello"
-          command: |
-            echo Hello!
-
   build:
     docker:
       - image: circleci/php:7.2-cli
@@ -20,6 +10,16 @@ jobs:
           name: "Nominal build step"
           command: |
             echo "Build! (not really)"
+
+  say-hello:
+    docker:
+      - image: circleci/php:7.2-cli
+
+    steps:
+      - run:
+          name: "Say Hello"
+          command: |
+            echo Hello!
 
   build-push:
     docker:
