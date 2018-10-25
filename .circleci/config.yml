@@ -1,83 +1,60 @@
-version: 2.0
+version: 2.1
+executor:
+  my-executor:
+    docker:
+      - image: circleci/php:7.2-cli
 
 jobs:
-  build:
-    docker:
-      - image: circleci/php:7.2-cli
-
-    steps:
-      - run:
-          name: "Nominal build step"
-          command: |
-            echo "Build! (not really)"
-
-  say-hello:
-    docker:
-      - image: circleci/php:7.2-cli
-
-    steps:
-      - run:
-          name: "Say Hello"
-          command: |
-            echo Hello!
-
-  build-push:
-    docker:
-      - image: circleci/php:7.2-cli
-
+  initialize:
+    executor: my-executor
     steps:
       - checkout
 
       - run:
-          name: "Gather Debug Info"
+          name: "Install citools"
           command: |
-            echo PWD=`pwd`
-            echo HOME="$HOME"
-            echo "ls -la .:"
-            ls -la .
-            echo "ls -la $HOME:"
-            ls -la $HOME
-            echo printenv:
-            printenv | sed -e 's/PASSWORD=.*/PASSWORD=----/' \
-                           -e 's/PRIVATE_KEY=.*/PRIVATE_KEY=----/' \
-                           -e 's/SECRET_ACCESS_KEY=.*/SECRET_ACCESS_KEY=----/' \
-                           -e 's/GH_TOKEN=.*/GH_TOKEN=----/'
-            echo git status:
-            git status
-            echo git rev-list HEAD
-            git rev-list HEAD
-            echo git tag --list
-            git tag --list
-            echo git tag --list --points-at \$CIRCLE_SHA1
-            git tag --list --points-at $CIRCLE_SHA1
+            DIR=`pwd`
+            cd $HOME
+            git clone --depth 1 git@github.com:NCAR/citools.git bin
+            cd "$DIR"
+
+      - run :
+          name: "Dump debug Info"
+          command: |
+            PATH="$HOME/bin:$PATH" export PATH
+            circle-debug-dump            
 
       - run:
-          name: "Pull submodules"
+          name: "Validate/fix GitHub release"
           command: |
-            git submodule init
-            git submodule update --remote citools
+            PATH="$HOME/bin:$PATH" export PATH
+            if [ ":$CIRCLE_TAG" ] ; then
+                normalize-github-release
+            fi
 
-      - setup_remote_docker
-
+  build:
+    executor: my-executor
+    steps:
       - run:
-          name: "Build image"
+          name: "Build"
           command: |
-            citools/docker-build -t $CIRCLE_PROJECT_REPONAME:latest .
+            echo "Mock build step"
 
 workflows:
   version: 2
-  build-push:
+  build:
     jobs:
-      - say-hello:
+      - initialize:
           filters:
             branches:
-              only:
-                - none
-      - build
-      - build-push:
+              only: /.*/
+            tags:
+              only: /^\d+\.\d+\.\d.*$/
+      - build-only:
+          requires: initialize
           filters:
             branches:
               only:
                 - master
             tags:
-              only: /.*/
+              only: /^\d+\.\d+\.\d.*$/
