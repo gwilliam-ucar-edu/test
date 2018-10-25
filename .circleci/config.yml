@@ -32,7 +32,7 @@ jobs:
                 normalize-github-release
             fi
 
-  build:
+  build-only:
     executor: my-executor
     steps:
       - run:
