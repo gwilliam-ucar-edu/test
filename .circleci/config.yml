@@ -49,7 +49,7 @@ workflows:
             branches:
               only: /.*/
             tags:
-              only: /^\d+\.\d+\.\d.*$/
+              only: /^[vV]?\d+\.\d+\.\d.*$/
       - build-only:
           requires:
             - initialize
@@ -58,4 +58,4 @@ workflows:
               only:
                 - master
             tags:
-              only: /^\d+\.\d+\.\d.*$/
+              only: /^[vV]?\d+\.\d+\.\d.*$/
