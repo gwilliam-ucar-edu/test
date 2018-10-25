@@ -1,5 +1,5 @@
 version: 2.1
-executor:
+executors:
   my-executor:
     docker:
       - image: circleci/php:7.2-cli
@@ -51,7 +51,8 @@ workflows:
             tags:
               only: /^\d+\.\d+\.\d.*$/
       - build-only:
-          requires: initialize
+          requires:
+            - initialize
           filters:
             branches:
               only:
