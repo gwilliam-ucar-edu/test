@@ -21,7 +21,7 @@ jobs:
           name: "Initialize workspace"
           command: |
               mkdir -p ${WORKSPACE}/bin ${WORKSPACE}/state
-              git clone --branch ${CITOOLS_TAG:-master} --depth 1 git@github.com:NCAR/citools.git ${WORKSPACE}/bin
+              git clone -v --branch ${CITOOLS_TAG:-master} --depth 1 git@github.com:NCAR/citools.git ${WORKSPACE}/bin
               ${WORKSPACE}/bin/circle-env ${INIT_RC}
               . ${INIT_RC}
               circle-install-tools ${WORKSPACE}/bin
