@@ -125,7 +125,7 @@ workflows:
                 - /^\d+\.\d+\.\d+[^+]*\+newbase.*/
       - deploy:
           requires:
-            - deploy-hold
+            - build-deployable
           filters:
             branches:
               ignore: /.*/
