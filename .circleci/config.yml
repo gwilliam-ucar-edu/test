@@ -31,6 +31,7 @@ jobs:
       - run:
           name: "Show environment, workspace"
           command: |
+              cat ${INIT_RC}
               . ${INIT_RC}
               echo "Environment variables:"
               ${WORKSPACE}/bin/circle-printenv
