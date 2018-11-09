@@ -122,7 +122,6 @@ workflows:
               ignore: /.*/
             tags:
               only:
-                - /^\d+\.\d+\.\d+(-staging)?(\+.*)?/
                 - /^\d+\.\d+\.\d+[^+]*\+newbase.*/
       - deploy:
           requires:
