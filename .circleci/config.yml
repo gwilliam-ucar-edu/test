@@ -1,44 +1,91 @@
 version: 2.1
 executors:
-  my-executor:
+  generic-executor:
     docker:
       - image: circleci/php:7.2-cli
+    working_directory: ~/project
+    environment:
+      IMAGE_NAME: "gwilliam0ucar/test"
+      WORKSPACE: "/tmp/workspace"
+      INIT_RC: "/tmp/workspace/state/init.rc"
+      PRERELEASE_ENVIRONMENTS: "test staging"
+      PRODUCTION_ENVIRONMENT: "production"
 
 jobs:
   initialize:
-    executor: my-executor
+    executor: generic-executor
     steps:
       - checkout
 
       - run:
-          name: "Install citools"
+          name: "Initialize workspace"
           command: |
-            DIR=`pwd`
-            cd $HOME
-            git clone --depth 1 git@github.com:NCAR/citools.git bin
-            cd "$DIR"
-
-      - run :
-          name: "Dump debug Info"
-          command: |
-            PATH="$HOME/bin:$PATH" export PATH
-            circle-debug-dump            
+              mkdir -p ${WORKSPACE}/bin ${WORKSPACE}/state
+              git clone --branch ${CITOOLS_TAG:-master} --depth 1 git@github.com:NCAR/citools.git ${WORKSPACE}/bin
+              ${SCRIPTDIR}/circle-env ${INIT_RC}
+              . ${INIT_RC}
+              circle-install-tools
+              circle-docker-login-init
+              echo cicada init
 
       - run:
-          name: "Validate/fix GitHub release"
+          name: "Show environment, workspace"
           command: |
-            PATH="$HOME/bin:$PATH" export PATH
-            if [ ":$CIRCLE_TAG" ] ; then
-                normalize-github-release
-            fi
+              . ${INIT_RC}
+              echo "Environment variables:"
+              ${WORKSPACE}/bin/circle-printenv
+              echo
+              echo "${WORKSPACE}:"
+              ls -lR ${WORKSPACE}
 
-  build-only:
-    executor: my-executor
+      - persist_to_workspace:
+          root: workspace
+          paths:
+            - bin
+            - state
+
+  build-nondeployable:
+    executor: generic-executor
     steps:
+      - setup_remote_docker
+
       - run:
           name: "Build"
           command: |
-            echo "Mock build step"
+              echo docker build .
+
+  build-deployable:
+    executor: generic-executor
+    steps:
+      - attach_workspace:
+          at: /tmp/workspace
+
+      - setup_remote_docker
+
+      - run:
+          name: "Build and push image, register image metadata"
+          command: |
+              . ${INIT_RC}
+              echo "Build deployable..."
+
+      - persist_to_workspace:
+          root: workspace
+          paths:
+            - state
+
+  deploy:
+    executor: generic-executor
+    steps:
+      - attach_workspace:
+          at: workspace
+
+      - setup_remote_docker
+
+      - run:
+          name: "Pull image, tag and repush, log"
+          command: |
+              . ${INIT_RC}
+              echo "deploy..."
 
 workflows:
   version: 2
@@ -49,13 +96,38 @@ workflows:
             branches:
               only: /.*/
             tags:
-              only: /^[vV]?\d+\.\d+\.\d.*$/
-      - build-only:
+              only: /^[vV]?\d+\.\d+\.\d+.*$/
+      - build-nondeployable:
           requires:
             - initialize
           filters:
             branches:
               only:
                 - master
+      - build-deployable:
+          requires:
+            - initialize
+          filters:
+            branches:
+              ignore: /.*/
             tags:
-              only: /^[vV]?\d+\.\d+\.\d.*$/
+              only: /^\d+\.\d+\.\d+.*$/
+      - deploy-hold:
+          type: approval
+          requires:
+            - build-deployable
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^\d+\.\d+\.\d+(((-staging)?(\+.*)?)|((-[^+]+)?\+newbase.*))$/
+      - deploy:
+          requires:
+            - deploy-hold
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^\d+\.\d+\.\d+.*/
+
+
