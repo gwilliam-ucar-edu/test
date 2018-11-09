@@ -24,8 +24,8 @@ jobs:
               git clone --branch ${CITOOLS_TAG:-master} --depth 1 git@github.com:NCAR/citools.git ${WORKSPACE}/bin
               ${WORKSPACE}/bin/circle-env ${INIT_RC}
               . ${INIT_RC}
-              circle-install-tools
-              circle-docker-login-init
+              circle-install-tools ${WORKSPACE}/bin
+              circle-docker-login-init ${IMAGE_NAME}
               echo cicada init
 
       - run:
