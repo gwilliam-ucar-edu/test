@@ -34,9 +34,10 @@ jobs:
       - run:
           name: "Initialize workspace"
           command: |
-              mkdir -p ${WORKSPACE}/bin ${WORKSPACE}/state
+              mkdir -p ${WORKSPACE}
               git clone -v --branch ${DIDACTIC_TAG:-master} --depth 1 \
                   ${DIDACTIC_REPO} ${WORKSPACE}
+              mkdir -p ${WORKSPACE}/state
               ${WORKSPACE}/bin/didactic-init
               . ${INIT_RC}
               circle-debug-dump
