@@ -5,45 +5,16 @@ executors:
       - image: circleci/php:7.2-cli
     working_directory: ~/project
     environment:
-      IMAGE_NAME: "gwilliam0ucar/test"
+      IMAGE_REGISTRY: ""
+      IMAGE_REPO: "gwilliam0ucar"
+      IMAGE_NAME: "test"
       WORKSPACE: "/tmp/workspace"
+      LOCAL_BIN: "/tmp/workspace/bin"
+      STATEDIR: "/tmp/workspace/state"
       INIT_RC: "/tmp/workspace/state/init.rc"
-      PRERELEASE_ENVIRONMENTS: "test staging"
-      PRODUCTION_ENVIRONMENT: "production"
+      DIDACTIC_REPO: "git@github.com:NCAR/didactic.git"
 
 jobs:
-  initialize:
-    executor: generic-executor
-    steps:
-      - checkout
-
-      - run:
-          name: "Initialize workspace"
-          command: |
-              mkdir -p ${WORKSPACE}/bin ${WORKSPACE}/state
-              git clone -v --branch ${CITOOLS_TAG:-master} --depth 1 git@github.com:NCAR/citools.git ${WORKSPACE}/bin
-              ${WORKSPACE}/bin/circle-env ${INIT_RC}
-              . ${INIT_RC}
-              circle-install-tools ${WORKSPACE}/bin
-              circle-docker-login-init ${IMAGE_NAME}
-              echo cicada init
-
-      - run:
-          name: "Show environment, workspace"
-          command: |
-              cat ${INIT_RC}
-              . ${INIT_RC}
-              echo "Environment variables:"
-              ${WORKSPACE}/bin/circle-printenv
-              echo
-              echo "${WORKSPACE}:"
-              ls -lR ${WORKSPACE}
-
-      - persist_to_workspace:
-          root: /tmp/workspace
-          paths:
-            - bin
-            - state
 
   build-nondeployable:
     executor: generic-executor
@@ -55,6 +26,25 @@ jobs:
           command: |
               echo docker build .
 
+  initialize-cd:
+    executor: generic-executor
+    steps:
+      - checkout
+
+      - run:
+          name: "Initialize workspace"
+          command: |
+              mkdir -p ${WORKSPACE}/bin ${WORKSPACE}/state
+              git clone -v --branch ${DIDACTIC_TAG:-master} --depth 1 \
+                  ${DIDACTIC_REPO} ${WORKSPACE}
+              ${WORKSPACE}/bin/didactic-init
+
+      - persist_to_workspace:
+          root: /tmp/workspace
+          paths:
+            - bin
+            - state
+
   build-deployable:
     executor: generic-executor
     steps:
@@ -64,10 +54,16 @@ jobs:
       - setup_remote_docker
 
       - run:
-          name: "Build and push image, register image metadata"
+          name: "Conditionally build, push, and register image"
           command: |
               . ${INIT_RC}
-              echo "Build deployable..."
+              if [[ -z "${IMAGE_TAG}" ]] ; then
+                  docker-cibuild --metadata=${IMAGE_METADATA} \
+                                 --image-name=${IMAGE_NAME} .
+                  didactic-cl --register-image
+              else
+                  echo "Image ${IMAGE_NAME}:${IMAGE_TAG} already exists"
+              fi
 
       - persist_to_workspace:
           root: /tmp/workspace
@@ -86,18 +82,19 @@ jobs:
           name: "Pull image, tag and repush, log"
           command: |
               . ${INIT_RC}
-              echo "deploy..."
+              if didactic-cl --check-authorization ; then
+                  docker-tag-push \
+                   ${IMAGE_NAME}:${IMAGE_TAG} \
+                   ${IMAGE_PATH} ${DEPLOY_TAGS}
+                  didactic-cl --register-deployment
+              else
+                  didactic-cl --request-authorization
+              fi
 
 workflows:
   version: 2
   build:
     jobs:
-      - initialize:
-          filters:
-            branches:
-              only: /.*/
-            tags:
-              only: /^[vV]?\d+\.\d+\.\d+.*$/
       - build-nondeployable:
           requires:
             - initialize
@@ -105,27 +102,23 @@ workflows:
             branches:
               only:
                 - master
+      - initialize-cd:
+          filters:
+            branches:
+              only: /.*/
+            tags:
+              only: /^\d+\.\d+\.\d+.*$/
       - build-deployable:
           requires:
-            - initialize
+            - initialize-cd
           filters:
             branches:
               ignore: /.*/
             tags:
               only: /^\d+\.\d+\.\d+.*$/
-      - deploy-hold:
-          type: approval
-          requires:
-            - build-deployable
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only:
-                - /^\d+\.\d+\.\d+[^+]*\+newbase.*/
       - deploy:
           requires:
-            - deploy-hold
+            - build-deployable
           filters:
             branches:
               ignore: /.*/
