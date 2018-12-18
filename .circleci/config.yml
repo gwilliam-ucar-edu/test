@@ -98,8 +98,6 @@ workflows:
   build:
     jobs:
       - build-nondeployable:
-          requires:
-            - initialize
           filters:
             branches:
               only:
