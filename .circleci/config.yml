@@ -38,6 +38,8 @@ jobs:
               git clone -v --branch ${DIDACTIC_TAG:-master} --depth 1 \
                   ${DIDACTIC_REPO} ${WORKSPACE}
               ${WORKSPACE}/bin/didactic-init
+              . ${INIT_RC}
+              circle-debug-dump
 
       - persist_to_workspace:
           root: /tmp/workspace
