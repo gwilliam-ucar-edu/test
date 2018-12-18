@@ -12,7 +12,7 @@ executors:
       LOCAL_BIN: "/tmp/workspace/bin"
       STATEDIR: "/tmp/workspace/state"
       INIT_RC: "/tmp/workspace/state/init.rc"
-      DIDACTIC_REPO: "git@github.com:NCAR/didactic.git"
+      DIDACTIC_REPO: "git@github.com:gwilliam-ucar-edu/didactic.git"
 
 jobs:
 
